@@ -1,9 +1,13 @@
+using APIWithJWT.IdentityAuth;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace APIWithJWT.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
@@ -14,16 +18,20 @@ namespace APIWithJWT.Controllers
     };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager; 
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
+            _userManager = userManager;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<IEnumerable<WeatherForecast>> Get()
         {
-            var user = HttpContext.User; // this is how you can conditionally check authentication and get current user
+            // get the ApplicationUser
+            var user = await _userManager.FindByNameAsync(User?.Identity?.Name);
+
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateTime.Now.AddDays(index),
